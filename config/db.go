@@ -39,6 +39,7 @@ func ConnectDB() {
 		&models.Inventory{},
 		&models.Customer{},
 		&models.Stock{},
+		&models.Faq{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate models:", err)

@@ -2,14 +2,21 @@ package main
 
 import (
 	"faqs-bot/config"
-	"faqs-bot/models"
 	"faqs-bot/routes"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	config.ConnectDB()
-	config.DB.AutoMigrate(&models.User{})
 
-	r := routes.SetupRouter()
+	r := gin.Default()
+
+	// Public Routes
+	routes.AuthRoutes(r)
+
+	// Protected Routes
+	routes.CustomerRoutes(r)
+
 	r.Run(":8080")
 }
