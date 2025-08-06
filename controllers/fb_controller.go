@@ -54,17 +54,63 @@ var (
 )
 
 // --- Load Text Files ---
+// func LoadTexts() {
+// 	inst, err := os.ReadFile("C:/Users/User/Desktop/Programming/Go/FAQs_Bot/gemini_instruction.txt")
+// 	if err != nil {
+// 		log.Println("Could not read Gemini instruction:", err)
+// 		geminiInstruction = "You are a friendly assistant for Innovation Technology. Reply casually and warmly."
+// 	} else {
+// 		geminiInstruction = string(inst)
+// 	}
+
+// 	profile, err := os.ReadFile("C:/Users/User/Desktop/Programming/Go/FAQs_Bot/company_profile.txt")
+// 	if err != nil {
+// 		log.Println("Could not read company profile:", err)
+// 		companyProfile = "Innovation Technology - Your trusted IT Software House."
+// 	} else {
+// 		companyProfile = string(profile)
+// 	}
+// }
+
 func LoadTexts() {
-	inst, err := os.ReadFile("C:/Users/User/Desktop/Programming/Go/FAQs_Bot/gemini_instruction.txt")
-	if err != nil {
+	// Just the filenames — must be in your working directory or use relative paths
+	instructionFile := `Gemini AI Instruction (Multilingual - English + မြန်မာ)
+Instruction:
+You are a smart, friendly assistant for Innovation Technology, an IT Software House.
+Your job is to reply to customers with short, warm, casual messages using emojis.
+Only send customer-facing replies – no explanations or extra context.
+
+Use clear, casual, positive language, suitable for chat or SMS.
+
+Always respond in the same language the customer uses (e.g. reply in Myanmar language if user types in Myanmar).
+
+Mention services like:
+
+Mobile & Web App Development 📱💻
+POS Systems 🧾
+Membership Management 👥
+Translator Services 🌏
+Student Management Systems 🎓
+
+Keep replies 1–2 short sentences with friendly tone and emojis.
+✅ You are replying as if you're casually chatting with a potential customer.`
+	profileFile := `Company Profile: Innovation Technology
+We are a dynamic IT Software House Service specializing in full-cycle software development.
+Key Services: Mobile & Web App Development 📱💻, POS Systems 🧾, Membership Management 👥, Translator Services 🌏, Student Management Systems 🎓
+Team: 6 founders with expertise in Backend, Frontend, and Technical Strategy.
+Contact: 09260202499
+`
+
+	// Load gemini_instruction.txt
+	if inst, err := os.ReadFile(instructionFile); err != nil {
 		log.Println("Could not read Gemini instruction:", err)
 		geminiInstruction = "You are a friendly assistant for Innovation Technology. Reply casually and warmly."
 	} else {
 		geminiInstruction = string(inst)
 	}
 
-	profile, err := os.ReadFile("C:/Users/User/Desktop/Programming/Go/FAQs_Bot/company_profile.txt")
-	if err != nil {
+	// Load company_profile.txt
+	if profile, err := os.ReadFile(profileFile); err != nil {
 		log.Println("Could not read company profile:", err)
 		companyProfile = "Innovation Technology - Your trusted IT Software House."
 	} else {
@@ -122,26 +168,135 @@ func FBWebhookReceive(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// --- Verify Webhook ---
+// func FBWebhookVerify(c *gin.Context) {
+// 	if c.Query("hub.verify_token") == os.Getenv("FB_VERIFY_TOKEN") {
+// 		c.String(http.StatusOK, c.Query("hub.challenge"))
+// 	} else {
+// 		c.String(http.StatusForbidden, "Verification failed")
+// 	}
+// }
+
+// --- Handle Facebook Message ---
+// func FBWebhookReceive(c *gin.Context) {
+// 	var event FBWebhookEvent
+// 	if err := c.BindJSON(&event); err != nil {
+// 		c.String(http.StatusBadRequest, "Invalid request")
+// 		return
+// 	}
+
+// 	for _, entry := range event.Entry {
+// 		for _, msg := range entry.Messaging {
+// 			mu.Lock()
+// 			if processedMessages[msg.Mid] {
+// 				mu.Unlock()
+// 				c.Status(http.StatusOK)
+// 				return
+// 			}
+// 			processedMessages[msg.Mid] = true
+// 			mu.Unlock()
+
+// 			senderID := msg.Sender.ID
+// 			userInput := strings.TrimSpace(msg.Message.Text)
+
+// 			// Handle Postback
+// 			if msg.Postback.Payload != "" {
+// 				handlePostback(senderID, msg.Postback.Payload)
+// 				c.Status(http.StatusOK)
+// 				return
+// 			}
+
+// 			// Handle Gemini Reply
+// 			if userInput != "" {
+// 				reply := getGeminiReply(userInput)
+// 				sendText(senderID, reply)
+// 				c.Status(http.StatusOK)
+// 				return
+// 			}
+// 		}
+// 	}
+// 	c.Status(http.StatusOK)
+// }
+
 // --- Gemini Reply Function ---
+// func getGeminiReply(userText string) string {
+// 	promptText := fmt.Sprintf("%s\n\nCompany Info:\n%s\n\nCustomer Message:\n%s",
+// 		geminiInstruction, companyProfile, userText)
+
+// 	requestBody := map[string]interface{}{
+// 		"prompt": map[string]interface{}{
+// 			"messages": []map[string]interface{}{
+// 				{
+// 					"author": "user",
+// 					"content": map[string]string{
+// 						"text": promptText,
+// 					},
+// 				},
+// 			},
+// 		},
+// 		"temperature":    0.7,
+// 		"candidateCount": 1,
+// 		"topP":           0.95,
+// 		"topK":           40,
+// 	}
+
+// 	jsonBody, err := json.Marshal(requestBody)
+// 	if err != nil {
+// 		log.Println("JSON marshal error:", err)
+// 		return "Sorry, something went wrong. 😔"
+// 	}
+
+// 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateMessage?key=" + os.Getenv("GEMINI_API_KEY")
+
+// 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
+// 	if err != nil {
+// 		log.Println("Gemini request error:", err)
+// 		return "Sorry, something went wrong. 😔"
+// 	}
+// 	defer resp.Body.Close()
+
+// 	bodyBytes, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		log.Println("Error reading Gemini response body:", err)
+// 		return "Couldn't process your request. 😔"
+// 	}
+
+// 	// Log full response body for debugging
+// 	log.Println("Gemini raw response:", string(bodyBytes))
+
+// 	var result struct {
+// 		Candidates []struct {
+// 			Content struct {
+// 				Text string `json:"text"`
+// 			} `json:"content"`
+// 		} `json:"candidates"`
+// 	}
+
+// 	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+// 		log.Println("Gemini response decode error:", err)
+// 		return "Couldn't process your request. 😔"
+// 	}
+
+// 	if len(result.Candidates) > 0 {
+// 		return result.Candidates[0].Content.Text
+// 	}
+
+// 	return "Hi! 😊 How can we help you today?"
+// }
+
 func getGeminiReply(userText string) string {
 	promptText := fmt.Sprintf("%s\n\nCompany Info:\n%s\n\nCustomer Message:\n%s",
 		geminiInstruction, companyProfile, userText)
 
 	requestBody := map[string]interface{}{
-		"prompt": map[string]interface{}{
-			"messages": []map[string]interface{}{
-				{
-					"author": "user",
-					"content": map[string]string{
-						"text": promptText,
-					},
+		"contents": []map[string]interface{}{
+			{
+				"role": "user",
+				"parts": []map[string]string{
+					{"text": promptText},
 				},
 			},
 		},
-		"temperature":    0.7,
-		"candidateCount": 1,
-		"topP":           0.95,
-		"topK":           40,
 	}
 
 	jsonBody, err := json.Marshal(requestBody)
@@ -150,7 +305,8 @@ func getGeminiReply(userText string) string {
 		return "Sorry, something went wrong. 😔"
 	}
 
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-2-0-flash:generateMessage?key=" + os.Getenv("GEMINI_API_KEY")
+	// ✅ Using Gemini 1.5 Flash with v1beta + generateContent
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + os.Getenv("GEMINI_API_KEY")
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
@@ -165,13 +321,14 @@ func getGeminiReply(userText string) string {
 		return "Couldn't process your request. 😔"
 	}
 
-	// Log full response body for debugging
 	log.Println("Gemini raw response:", string(bodyBytes))
 
 	var result struct {
 		Candidates []struct {
 			Content struct {
-				Text string `json:"text"`
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
 			} `json:"content"`
 		} `json:"candidates"`
 	}
@@ -181,12 +338,13 @@ func getGeminiReply(userText string) string {
 		return "Couldn't process your request. 😔"
 	}
 
-	if len(result.Candidates) > 0 {
-		return result.Candidates[0].Content.Text
+	if len(result.Candidates) > 0 && len(result.Candidates[0].Content.Parts) > 0 {
+		return result.Candidates[0].Content.Parts[0].Text
 	}
 
 	return "Hi! 😊 How can we help you today?"
 }
+
 
 // --- Postback Handler ---
 func handlePostback(userID, payload string) {
