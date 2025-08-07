@@ -13,6 +13,7 @@ func SetupRouter() *gin.Engine {
 	{
 		api.POST("/login", controllers.Login)
 		api.POST("/register", controllers.Register)
+		api.GET("/inventory", controllers.GetAllProductsHandler)
 	}
 
 	// Add Facebook webhook endpoint (no /api prefix)

@@ -55,16 +55,44 @@ var (
 
 // --- Load Text Files ---
 func LoadTexts() {
-	inst, err := os.ReadFile("C:/Users/User/Desktop/Programming/Go/FAQs_Bot/gemini_instruction.txt")
-	if err != nil {
+	// Just the filenames — must be in your working directory or use relative paths
+	instructionFile := `Gemini AI Instruction (Multilingual - English + မြန်မာ)
+Instruction:
+You are a smart, friendly assistant for Innovation Technology, an IT Software House.
+Your job is to reply to customers with short, warm, casual messages using emojis.
+Only send customer-facing replies – no explanations or extra context.
+
+Use clear, casual, positive language, suitable for chat or SMS.
+
+Always respond in the same language the customer uses (e.g. reply in Myanmar language if user types in Myanmar).
+
+Mention services like:
+
+Mobile & Web App Development 📱💻
+POS Systems 🧾
+Membership Management 👥
+Translator Services 🌏
+Student Management Systems 🎓
+
+Keep replies 1–2 short sentences with friendly tone and emojis.
+✅ You are replying as if you're casually chatting with a potential customer.`
+	profileFile := `Company Profile: Innovation Technology
+We are a dynamic IT Software House Service specializing in full-cycle software development.
+Key Services: Mobile & Web App Development 📱💻, POS Systems 🧾, Membership Management 👥, Translator Services 🌏, Student Management Systems 🎓
+Team: 6 founders with expertise in Backend, Frontend, and Technical Strategy.
+Contact: 09260202499
+`
+
+	// Load gemini_instruction.txt
+	if inst, err := os.ReadFile(instructionFile); err != nil {
 		log.Println("Could not read Gemini instruction:", err)
 		geminiInstruction = "You are a friendly assistant for Innovation Technology. Reply casually and warmly."
 	} else {
 		geminiInstruction = string(inst)
 	}
 
-	profile, err := os.ReadFile("C:/Users/User/Desktop/Programming/Go/FAQs_Bot/company_profile.txt")
-	if err != nil {
+	// Load company_profile.txt
+	if profile, err := os.ReadFile(profileFile); err != nil {
 		log.Println("Could not read company profile:", err)
 		companyProfile = "Innovation Technology - Your trusted IT Software House."
 	} else {
