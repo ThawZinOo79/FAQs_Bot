@@ -12,8 +12,9 @@ type Inventory struct {
 	Price         float64        `json:"price"`
 	Stock         int            `json:"stock"`
 	Description   string         `json:"description"`
-	Category      string         `json:"category"`   // e.g., "Makeup", "Home Accessories"
-	Attributes    datatypes.JSON `json:"attributes"` // flexible fields in JSON
+	Category      string         `json:"category"`
+	Attributes    datatypes.JSON `json:"attributes"`
+	ImageURL      string         `json:"image_url"` // <- S3 image link field
 	AvailableTime time.Time      `json:"available_time"`
 	EstimateTime  time.Time      `json:"estimate_time"`
 }
