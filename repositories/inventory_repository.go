@@ -37,3 +37,11 @@ func GetProductByID(id uint) (*models.Inventory, error) {
 	result := config.DB.First(&product, id)
 	return &product, result.Error
 }
+
+func GetAllProducts() ([]models.Inventory, error) {
+	var products []models.Inventory
+	result := config.DB.Find(&products)
+	return products, result.Error
+}
+
+

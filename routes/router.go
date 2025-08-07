@@ -14,6 +14,7 @@ func SetupRouter() *gin.Engine {
 	{
 		api.POST("/login", controllers.Login)
 		api.POST("/register", controllers.Register)
+		api.GET("/inventory", controllers.GetAllProductsHandler)
 	}
 
 	// Direct webhook path for Facebook to access
