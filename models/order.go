@@ -8,4 +8,5 @@ type Order struct {
 	InventoryID uint      `json:"inventory_id"`
 	OrderDate   time.Time `json:"order_date"`
 	Quantity    int       `json:"quantity"`
+	Status      string    `json:"status"`
 }
