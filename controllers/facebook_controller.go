@@ -33,7 +33,12 @@ type FBWebhookEvent struct {
 type FBMessaging struct {
 	Sender    Sender    `json:"sender"`
 	Recipient Recipient `json:"recipient"`
-	Message   Message   `json:"message"`
+	Message   *Message  `json:"message,omitempty"`
+	Postback  *Postback `json:"postback,omitempty"`
+}
+
+type Postback struct {
+	Payload string `json:"payload"`
 }
 
 type Sender struct {
@@ -289,16 +294,32 @@ func HandleMessage(c *gin.Context) {
 
 	for _, entry := range event.Entry {
 		for _, msg := range entry.Messaging {
-			if msg.Sender.ID == pageID || msg.Message.Text == "" {
+			if msg.Sender.ID == pageID {
 				continue
 			}
 
 			userID := msg.Sender.ID
-			userMsg := msg.Message.Text
+			var userMsg string
+
+			// 🟡 Support both text messages and postback payloads
+			if msg.Message != nil && msg.Message.Text != "" {
+				userMsg = msg.Message.Text
+			} else if msg.Postback != nil && msg.Postback.Payload != "" {
+				userMsg = msg.Postback.Payload
+			} else {
+				continue // skip if no valid message or payload
+			}
 
 			fmt.Println("Received message from:", userID, "text:", userMsg)
 
 			go func(uid, message string) {
+				// 🟢 Directly handle ORDER postback payloads
+				if strings.HasPrefix(message, "ORDER_") {
+					SendReply(uid, "📦 မှာစာအတွက်ကျေးဇူးတင်ပါတယ်နော်။ ငွေပေးချေမှုအတွက် admin ဆက်သွယ်ပါလိမ့်မယ် 🙏")
+					return
+				}
+
+				// 🔍 Intent detection with Gemini
 				intent, query := CallGeminiIntent(message)
 
 				switch intent {
@@ -323,7 +344,6 @@ func HandleMessage(c *gin.Context) {
 					reply := CallGeminiWithCompanyProfile(message)
 					SendReply(uid, reply)
 				}
-
 			}(userID, userMsg)
 		}
 	}
@@ -351,6 +371,14 @@ Always respond in the same language the customer uses. If the user types in Burm
 🔁 If the customer asks about **returns, refunds, or exchanges** like "ဝယ်ပြီးပြန်လဲလို့ရလား", explain politely that second-hand phones can't be returned but are fully tested.
 
   - Myanmar example: "🙏 ဝယ်ပြီးပြန်လဲတာ မရနိုင်ပါဘူးနော်၊ ဒါပေမဲ့ ဝယ်ဖို့ကောင်းအောင် စစ်ဆေးပြီးပေးတယ် 📱"
+
+  📱 If the user asks for phone suggestions like "Which phone should I buy?" or compares brands like "iPhone vs Samsung", give a friendly, short suggestion based on general preferences:
+- Recommend iPhone if user prefers performance, camera, and ecosystem.
+- Recommend Samsung if user wants flexibility, customization, and better value for money.
+
+Examples:
+English: "📱 If you like smooth performance and camera, go for iPhone. But if you want customization and better value, Samsung is a great choice too 😎"
+Myanmar: "📱 မိမိအတွက် အမြန်ဆန်ပြီး ကင်မရာကောင်းတဲ့ဖုန်းလိုချင်ရင် iPhone ကောင်းပါတယ်၊ မူလတန်းအရ လှုပ်ရှားနိုင်မှုနဲ့ စျေးနှုန်းလည်း ပြေလည်ချင်ရင်တော့ Samsung ကောင်းပါတယ်နော် 😄"
 
 ❓ Common FAQ patterns and replies:
 - Warranty: "🛡️ စက်တွေမှာ စမ်းသပ်ပြီးဖြစ်ပြီး အာမခံနည်းနည်းရှိပါတယ်နော်"
